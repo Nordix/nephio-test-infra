@@ -11,7 +11,7 @@
 # shellcheck source=e2e/lib/_utils.sh
 source "${E2EDIR:-$HOME/test-infra/e2e}/lib/_utils.sh"
 
-# porch_wait_published_packagerev() - Waits for a kpt package revision gets published
+# porch_wait_published_packagerev() - Waits for a kpt package revision to be published
 function porch_wait_published_packagerev {
     local pkg_name="$1"
     local repository="$2"
@@ -42,4 +42,23 @@ function porch_wait_published_packagerev {
         error "Timed out waiting for revisions on $pkg_name package"
     fi
     kubectl wait --for jsonpath='{.spec.lifecycle}'=Published packagerevisions $found --timeout=10m
+}
+
+# porch_wait_packagerev_ready() - Waits for a kpt package revision's kpt pipeline to complete successfully
+function porch_wait_packagerev_ready {
+    local pkgrev_id="$1"
+    local timeout=${2:-900}
+    lapse=$timeout
+
+    info "checking for condition-based readiness on \"$pkgrev_id\""
+    local found=""
+    while [[ $lapse -gt 0 ]]; do
+        if ! kubectl get packagerevision "$pkgrev_id" -o jsonpath='{range .status.conditions[*]}{.type}{":"}{.status}{"\n"}{end}' | grep -E ":False$"; then
+            info "found all conditions with status == \"True\" on $pkgrev_id"
+            [[ $((timeout * 2 / 3)) -lt $lapse ]] || warn "$pkgrev_id package took $lapse seconds for pipeline to pass"
+            break
+        fi
+        lapse=$((lapse - 5))
+        sleep 5
+    done
 }
