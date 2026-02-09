@@ -21,6 +21,6 @@ spec:
     repo: edge
     package: oai-ran-ue
   annotations:
-    approval.nephio.org/policy: initial
+    approval.nephio.org/policy: always
   injectors:
   - name: edge

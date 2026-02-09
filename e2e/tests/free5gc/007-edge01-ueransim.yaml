@@ -11,6 +11,6 @@ spec:
     repo: edge01
     package: ueransim
   annotations:
-    approval.nephio.org/policy: initial
+    approval.nephio.org/policy: always
   injectors:
   - name: edge01
